@@ -30,13 +30,20 @@ export class PlannerAgent {
         this.systemPrompt = fs.readFileSync(promptPath, 'utf-8');
     }
 
-    public async plan(userMessage: string, metadata: string, historyContext: string): Promise<PlannerOutput> {
+    public async plan(userMessage: string, metadata: string, historyContext: string, queryId: string): Promise<PlannerOutput> {
         console.log(`[PLANNER] Planning for: "${userMessage}"`);
 
         const response = await this.model.invoke([
             new SystemMessage(this.systemPrompt),
             new HumanMessage(`METADATA: ${metadata}\n\nIMMEDIATE HISTORY:\n${historyContext}\n\nUSER MESSAGE: ${userMessage}`)
-        ]);
+        ], {
+            metadata: {
+                agent: "Planner",
+                query: userMessage,
+                full_metadata: metadata,
+                queryId: queryId
+            }
+        });
 
         const rawContent = response.content as string;
 

@@ -108,6 +108,21 @@ async function gatherContext(
         await handleHistoricalContext(chat, plan, contextMessages);
     }
 
+    // 3. Quoted Message Text (Crucial if context_needed is false but it is a reply)
+    if (message.hasQuotedMsg) {
+        const q = await message.getQuotedMessage();
+        if (q.type === 'chat') {
+            const qSender = await utils.getSenderName(q);
+            // We can't access config here easily without passing it.
+            // But we can just use bodyRaw or assume simple clean.
+            // Actually, gatherContext has no 'config' argument. checking scope.
+            // 'config' is global in this file!
+            const qBody = utils.cleanMessageBody(q.body, config);
+            contextMessages.unshift(new HumanMessage(`[REPLIED_MESSAGE] [Sender: ${qSender}]: ${qBody}`));
+            console.log(`[CTX] Added quoted message: "${qBody.substring(0, 50)}..."`);
+        }
+    }
+
     // Add final user query block
     contextMessages.push(new HumanMessage({ content: finalUserContent }));
     return contextMessages;
@@ -300,15 +315,19 @@ client.on('message_create', async (message: Message) => {
         const senderName = await utils.getSenderName(message);
         const metadata = `Sender: ${senderName}, Timestamp: ${new Date().toISOString()}`;
 
+        // Generate Query ID
+        const queryId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        console.log(`[START] Query ID: ${queryId}`);
+
         console.log("[PLANNER] Analyzing context...");
-        const plan = await planner.plan(cleanBody, metadata, plannerContext);
+        const plan = await planner.plan(cleanBody, metadata, plannerContext, queryId);
         console.log(`[PLAN]`, JSON.stringify(plan, null, 2));
 
         // 6. GATHER CONTEXT
         const contextMessages = await gatherContext(message, chat, plan, cleanBody, isExplicitTranscription);
 
         // 7. EXECUTION
-        const responseText = await executor.execute(plan, contextMessages);
+        const responseText = await executor.execute(plan, contextMessages, queryId);
 
         // 8. RESPONSE
         await message.reply(`${config.bot.ignoreLoopEmoji} ${responseText}`);

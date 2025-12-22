@@ -65,7 +65,7 @@ export class ExecutorAgent {
         return persona;
     }
 
-    public async execute(plan: PlannerOutput, contextMessages: BaseMessage[]): Promise<string> {
+    public async execute(plan: PlannerOutput, contextMessages: BaseMessage[], queryId: string): Promise<string> {
         const model = this.getModel(plan);
         const systemPrompt = this.buildSystemPrompt(plan);
 
@@ -75,7 +75,15 @@ export class ExecutorAgent {
         ];
 
         console.log(`[EXECUTOR] Executing...`);
-        const response = await model.invoke(messages);
+        const response = await model.invoke(messages, {
+            metadata: {
+                agent: "Executor",
+                plan_model: plan.target_model,
+                is_abuse: plan.is_abuse,
+                is_self_reflection: plan.is_self_reflection,
+                queryId: queryId
+            }
+        });
         return response.content as string;
     }
 }

@@ -2,6 +2,7 @@ import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { ChatXAI } from '@langchain/xai';
 import { ChatOpenAI } from '@langchain/openai';
 import { ModelConfig } from '../config/config';
+import { FileLoggingCallbackHandler } from './loggingCallbackHandler';
 
 export class LLMFactory {
     public static createLLM(config: ModelConfig): BaseChatModel {
@@ -16,12 +17,14 @@ export class LLMFactory {
                     apiKey: apiKey,
                     model: config.modelName,
                     temperature: config.temperature ?? 0.7,
+                    callbacks: [new FileLoggingCallbackHandler()]
                 });
             case 'openai':
                 return new ChatOpenAI({
                     apiKey: apiKey,
                     modelName: config.modelName,
                     temperature: config.temperature ?? 0.7,
+                    callbacks: [new FileLoggingCallbackHandler()]
                 });
             // Add other providers here (Anthropic, etc.)
             default:
