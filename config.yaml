@@ -1,0 +1,31 @@
+bot:
+  triggers: 
+    - "@golem"
+    - "@g"
+  rateLimit:
+    maxRequests: 10
+    windowHours: 1
+  ignoreLoopEmoji: "🗿"
+
+models:
+  planner:
+    provider: "grok"
+    modelName: "grok-2-latest"
+    apiKeyEnvVar: "XAI_API_KEY"
+    temperature: 0
+  
+  executorFast:
+    provider: "grok"
+    modelName: "grok-2-latest"
+    apiKeyEnvVar: "XAI_API_KEY"
+    temperature: 0.7
+
+  executorReasoning:
+    provider: "grok"
+    modelName: "grok-2-latest" # You can swap this to a more powerful model if available
+    apiKeyEnvVar: "XAI_API_KEY"
+    temperature: 0.7
+
+features:
+  audioTranscription: true
+  imageAnalysis: true

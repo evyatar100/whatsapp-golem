@@ -1,6 +1,7 @@
 import { Client, LocalAuth, Message } from 'whatsapp-web.js';
 import qrcode from 'qrcode-terminal';
 import dotenv from 'dotenv';
+import { ConfigLoader } from './config/config';
 import { PlannerAgent } from './agents/planner';
 import { ExecutorAgent } from './agents/executor';
 import { RateLimiter } from './services/rateLimiter';
@@ -9,10 +10,13 @@ import { BaseMessage, HumanMessage, AIMessage } from '@langchain/core/messages';
 
 dotenv.config();
 
-const rateLimiter = new RateLimiter(10, 1); // 10 req/hour
+const config = ConfigLoader.load();
+
+// Load rate limits from config
+const rateLimiter = new RateLimiter(config.bot.rateLimit.maxRequests, config.bot.rateLimit.windowHours);
 const audioService = new AudioService();
-const planner = new PlannerAgent();
-const executor = new ExecutorAgent();
+const planner = new PlannerAgent(config.models.planner);
+const executor = new ExecutorAgent(config);
 
 // --- WhatsApp Client ---
 const client = new Client({
@@ -45,15 +49,16 @@ client.on('message_create', async (message: Message) => {
     // 0. Loop Prevention (Moai Protocol)
     // 0. Loop Prevention (Moai Protocol)
     // Ignore ANY message containing 🗿, whether from me or others.
-    if (message.body.includes('🗿')) {
-        console.log('[IGNORE] Message contains 🗿 (Loop Prevention)');
+    const ignoreEmoji = config.bot.ignoreLoopEmoji;
+    if (message.body.includes(ignoreEmoji)) {
+        console.log(`[IGNORE] Message contains ${ignoreEmoji} (Loop Prevention)`);
         return;
     }
 
     const chat = await message.getChat();
 
     // 1. Triggers
-    const triggers = ["@golem", "@g"];
+    const triggers = config.bot.triggers;
     const bodyLower = message.body.toLowerCase();
     const isTriggered = triggers.some(t => bodyLower.includes(t)) || message.body.startsWith("@transcribe") || message.body.startsWith("@t");
 

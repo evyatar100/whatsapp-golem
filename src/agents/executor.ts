@@ -1,4 +1,6 @@
-import { ChatXAI } from '@langchain/xai';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { LLMFactory } from '../services/llmFactory';
+import { AppConfig } from '../config/config';
 import { HumanMessage, SystemMessage, BaseMessage } from '@langchain/core/messages';
 import fs from 'fs-extra';
 import path from 'path';
@@ -8,7 +10,16 @@ export class ExecutorAgent {
     private promptTemplate: string;
     private techStackPrompt: string;
 
-    constructor() {
+    private config: AppConfig;
+    private fastModel: BaseChatModel;
+    private reasoningModel: BaseChatModel;
+
+    constructor(config: AppConfig) {
+        this.config = config;
+        this.fastModel = LLMFactory.createLLM(config.models.executorFast);
+        // Optimization: Lazy init or just init both. Init both is safer for now.
+        this.reasoningModel = LLMFactory.createLLM(config.models.executorReasoning);
+
         const promptPath = path.join(process.cwd(), 'src', 'prompts', 'executor.txt');
         this.promptTemplate = fs.readFileSync(promptPath, 'utf-8');
 
@@ -16,19 +27,14 @@ export class ExecutorAgent {
         this.techStackPrompt = fs.readFileSync(techPath, 'utf-8');
     }
 
-    private getModel(plan: PlannerOutput): ChatXAI {
-        let modelId = process.env.GROK_MODEL_FAST;
+    private getModel(plan: PlannerOutput): BaseChatModel {
         if (plan.target_model === 'reasoning') {
-            modelId = process.env.GROK_MODEL_REASONING;
+            console.log(`[EXECUTOR] Selected Model: REASONING (Reason: ${plan.target_model})`);
+            return this.reasoningModel;
         }
 
-        console.log(`[EXECUTOR] Selected Model: ${modelId} (Reason: ${plan.target_model})`);
-
-        return new ChatXAI({
-            apiKey: process.env.XAI_API_KEY,
-            model: modelId || "grok-beta",
-            temperature: 0.7,
-        });
+        console.log(`[EXECUTOR] Selected Model: FAST (Reason: ${plan.target_model})`);
+        return this.fastModel;
     }
 
     private buildSystemPrompt(plan: PlannerOutput): string {

@@ -1,4 +1,6 @@
-import { ChatXAI } from '@langchain/xai';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { LLMFactory } from '../services/llmFactory';
+import { ModelConfig } from '../config/config';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import fs from 'fs-extra';
 import path from 'path';
@@ -18,16 +20,11 @@ export interface PlannerOutput {
 }
 
 export class PlannerAgent {
-    private model: ChatXAI;
+    private model: BaseChatModel;
     private systemPrompt: string;
 
-    constructor() {
-        const modelId = process.env.GROK_MODEL_FAST || "grok-beta"; // Fallback
-        this.model = new ChatXAI({
-            apiKey: process.env.XAI_API_KEY,
-            model: modelId,
-            temperature: 0, // Deterministic for planning
-        });
+    constructor(modelConfig: ModelConfig) {
+        this.model = LLMFactory.createLLM(modelConfig);
 
         const promptPath = path.join(process.cwd(), 'src', 'prompts', 'planner.txt');
         this.systemPrompt = fs.readFileSync(promptPath, 'utf-8');
