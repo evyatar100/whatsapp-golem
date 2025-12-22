@@ -20,6 +20,7 @@ export interface AppConfig {
             windowHours: number;
         };
         ignoreLoopEmoji: string;
+        ownerName: string;
     };
     models: {
         planner: ModelConfig;
@@ -39,7 +40,8 @@ const DEFAULT_CONFIG: AppConfig = {
             maxRequests: 10,
             windowHours: 1
         },
-        ignoreLoopEmoji: "🗿"
+        ignoreLoopEmoji: "🗿",
+        ownerName: "Evyatar"
     },
     models: {
         planner: {
