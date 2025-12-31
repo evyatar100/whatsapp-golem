@@ -8,13 +8,13 @@ A smart, agentic WhatsApp bot powered by LangChain and LLMs (Grok, OpenAI, etc.)
 - **🗣️ Audio Transcription**: Automatically transcribes voice notes and PTT messages.
 - **👀 Vision Capabilities**: Can see and analyze images sent to it.
 - **📝 Context Awareness**: Smart history fetching, including "Last Active Day" logic.
-- **⚙️ Configurable**: Switch between LLM providers (Grok, OpenAI) and customize trigger words via YAML.
+- **⚙️ Configurable**: Switch between LLM providers (OpenAI recommended, or Grok) and customize trigger words via YAML.
 
 ## Prerequisites
 
 - Node.js (v18+)
 - A WhatsApp account (linked via QR code)
-- API Key for your LLM provider (e.g., `XAI_API_KEY` or `OPENAI_API_KEY`)
+- API Key for your LLM provider (recommended: `OPENAI_API_KEY`, or `XAI_API_KEY` for Grok)
 
 ## Setup
 
@@ -32,8 +32,8 @@ A smart, agentic WhatsApp bot powered by LangChain and LLMs (Grok, OpenAI, etc.)
 3. **Configure Environment**
    Create a `.env` file for your secrets:
    ```env
-   XAI_API_KEY=xai-...
-   # OPENAI_API_KEY=sk-... 
+   OPENAI_API_KEY=sk-...
+   # XAI_API_KEY=xai-... (optional, for Grok)
    ```
 
 4. **Customize Config**
@@ -44,8 +44,8 @@ A smart, agentic WhatsApp bot powered by LangChain and LLMs (Grok, OpenAI, etc.)
    
    models:
      planner:
-       provider: "grok"     # or "openai"
-       modelName: "grok-beta"
+       provider: "openai"
+       modelName: "gpt-5.2"
    ```
 
 ## Running
