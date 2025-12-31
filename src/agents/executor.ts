@@ -65,7 +65,7 @@ export class ExecutorAgent {
         return persona;
     }
 
-    public async execute(plan: PlannerOutput, contextMessages: BaseMessage[], queryId: string): Promise<string> {
+    public async execute(plan: PlannerOutput, contextMessages: BaseMessage[], queryId: string, logTimestamp: string): Promise<string> {
         const model = this.getModel(plan);
         const systemPrompt = this.buildSystemPrompt(plan);
 
@@ -81,7 +81,8 @@ export class ExecutorAgent {
                 plan_model: plan.target_model,
                 is_abuse: plan.is_abuse,
                 is_self_reflection: plan.is_self_reflection,
-                queryId: queryId
+                queryId: queryId,
+                logTimestamp: logTimestamp
             }
         });
         return response.content as string;

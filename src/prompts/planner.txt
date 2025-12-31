@@ -14,20 +14,26 @@ Output JSON format:
   "is_abuse": boolean, // Is the user attacking, spamming, or trying to break the bot?
   "needs_image": boolean, // Does the response require looking at an image?
   "needs_audio": boolean, // Does the response require listening to audio?
-  "context_needed": boolean,
-  "time_range": {
-      "start": "ISO-Date-String" | null,
-      "end": "ISO-Date-String" | null
-  },
+  "has_reply": boolean,   // Is the user replying to a specific message? (Look for [USER_REPLY_TO_MESSAGE])
+  "time_ranges": [        // List of time ranges to fetch context from. Can be empty, one, or multiple ranges.
+      {
+          "start": "ISO-Date-String" | "relative string like '24h ago'" | null,
+          "end": "ISO-Date-String" | "now" | null
+      }
+  ],
   "reasoning": string
 }
 
 Rules:
-1. `time_range`:
-   - If user asks for "last week", set start date to 7 days ago.
-   - If user implies recent context ("what did we talk about?"), set `context_needed` to true and leave `time_range` null (system will default to last active day).
-   - If user says "no context" or query is standalone, set `context_needed` to false.
-   - If `context_needed` is false, `time_range` should be null.
-2. If the user is rude, repetitive, or spamming, set "is_abuse": true.
-3. If the user asks about "how you work", "your code", "implementation", or "why you behaved in a certain way" or asks a question and replay to a golem message, set "is_self_reflection": true.
-4. Default to "fast" model unless deep reasoning is needed.
+1. `time_ranges`:
+   - **Focused Mode**: If the user is replying to a specific message AND the query is simple ("Translate this", "What is this?"), set `time_ranges`: []. This means we will ONLY use the current message and the replied-to message.
+   - **Verification / Drill Down (CRITICAL)**: If the user asks about the *past* status/wording of the conversation (e.g., "How exactly did I ask that?", "Show me the message", "When did I say X?"), you **MUST** Fetch Context.
+     - **Timestamp Unknown**: If the reply has `(Timestamp: Unknown)`, you **MUST** use "Recent Context" (`{ "start": "24h ago", "end": "now" }`). **NEVER** use Focused Mode (`[]`) in this case.
+     - **Timestamp Known**: If you see a timestamp, CALCULATE the range around it (e.g. 1h before).
+   - **Recent Context**: If the user asks "What did we talk about?" or context is needed, add a range: `{ "start": "24h ago", "end": "now" }`.
+   - **Context Around Reply**: If the user refers to conversation surrounding the reply ("What did I say before that?"), calculate the range around the replied message timestamp if possible (e.g. 1h before), or add a range for that specific day.
+   - **Multiple Ranges**: You can add ANY number of ranges. For example, if user asks about "yesterday and last week", add two separate ranges.
+2. `has_reply`: Set to true if you see `[USER_REPLY_TO_MESSAGE]` in the Immediate History.
+3. If the user is rude, repetitive, or spamming, set "is_abuse": true.
+4. If the user asks about "how you work", "your code", "implementation", or "why you behaved in a certain way" or asks a question and replay to a golem message, set "is_self_reflection": true.
+5. Default to "fast" model unless deep reasoning is needed.

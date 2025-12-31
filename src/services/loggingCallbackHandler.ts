@@ -4,6 +4,7 @@ import { LLMResult } from "@langchain/core/outputs";
 import { ChatGeneration } from "@langchain/core/outputs";
 import fs from 'fs-extra';
 import path from 'path';
+import { getLogTimestamp } from '../utils/dateUtils';
 
 export class FileLoggingCallbackHandler extends BaseCallbackHandler {
     name = "FileLoggingCallbackHandler";
@@ -63,8 +64,9 @@ export class FileLoggingCallbackHandler extends BaseCallbackHandler {
 
         if (entry.metadata && entry.metadata.queryId) {
             // Create a directory for this query
-            // Example name: 2025-12-22-1530-queryid
-            const timestampShort = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            // Example name: 251222-153045-queryid
+            // Use provided logTimestamp if available (from metadata), otherwise fallback to current time
+            const timestampShort = entry.metadata.logTimestamp || getLogTimestamp();
             const queryDirName = `${timestampShort}-${entry.metadata.queryId}`;
             entryDir = path.join(this.logDirectory, queryDirName);
 

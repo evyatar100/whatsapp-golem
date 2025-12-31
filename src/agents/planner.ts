@@ -11,11 +11,11 @@ export interface PlannerOutput {
     is_abuse: boolean;
     needs_image: boolean;
     needs_audio: boolean;
-    context_needed: boolean;
-    time_range: {
+    has_reply: boolean;
+    time_ranges: Array<{
         start: string | null;
         end: string | null;
-    } | null;
+    }>;
     reasoning: string;
 }
 
@@ -30,7 +30,7 @@ export class PlannerAgent {
         this.systemPrompt = fs.readFileSync(promptPath, 'utf-8');
     }
 
-    public async plan(userMessage: string, metadata: string, historyContext: string, queryId: string): Promise<PlannerOutput> {
+    public async plan(userMessage: string, metadata: string, historyContext: string, queryId: string, logTimestamp: string): Promise<PlannerOutput> {
         console.log(`[PLANNER] Planning for: "${userMessage}"`);
 
         const response = await this.model.invoke([
@@ -41,7 +41,8 @@ export class PlannerAgent {
                 agent: "Planner",
                 query: userMessage,
                 full_metadata: metadata,
-                queryId: queryId
+                queryId: queryId,
+                logTimestamp: logTimestamp
             }
         });
 
@@ -59,8 +60,8 @@ export class PlannerAgent {
                 is_abuse: !!plan.is_abuse,
                 needs_image: !!plan.needs_image,
                 needs_audio: !!plan.needs_audio,
-                context_needed: plan.context_needed !== undefined ? plan.context_needed : true, // Default to true if unsure
-                time_range: plan.time_range || null,
+                has_reply: !!plan.has_reply,
+                time_ranges: Array.isArray(plan.time_ranges) ? plan.time_ranges : [],
                 reasoning: plan.reasoning || "No reasoning provided"
             };
         } catch (e) {
@@ -72,8 +73,8 @@ export class PlannerAgent {
                 is_abuse: false,
                 needs_image: false,
                 needs_audio: false,
-                context_needed: true,
-                time_range: null,
+                has_reply: false,
+                time_ranges: [{ start: null, end: null }], // Default to recent history on error
                 reasoning: "Fallback due to parse error"
             };
         }

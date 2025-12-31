@@ -45,21 +45,21 @@ const DEFAULT_CONFIG: AppConfig = {
     },
     models: {
         planner: {
-            provider: 'grok',
-            modelName: 'grok-4-1-fast-non-reasoning',
-            apiKeyEnvVar: 'XAI_API_KEY',
+            provider: 'openai',
+            modelName: 'gpt-5.2',
+            apiKeyEnvVar: 'OPENAI_API_KEY',
             temperature: 0
         },
         executorFast: {
-            provider: 'grok',
-            modelName: 'grok-4-1-fast-non-reasoning',
-            apiKeyEnvVar: 'XAI_API_KEY',
+            provider: 'openai',
+            modelName: 'gpt-5.2',
+            apiKeyEnvVar: 'OPENAI_API_KEY',
             temperature: 0.7
         },
         executorReasoning: {
-            provider: 'grok',
-            modelName: 'grok-4-fast-reasoning',
-            apiKeyEnvVar: 'XAI_API_KEY', // Fallback, usually separate
+            provider: 'openai',
+            modelName: 'gpt-5.2-pro',
+            apiKeyEnvVar: 'OPENAI_API_KEY', // Fallback, usually separate
             temperature: 0.7
         }
     },
